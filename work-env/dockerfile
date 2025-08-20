@@ -1,0 +1,44 @@
+# dev.Dockerfile
+FROM tsl0922/ttyd:latest
+
+USER root
+SHELL ["/bin/sh", "-lc"]
+
+# 基础工具
+RUN apk add --no-cache bash curl jq git openssh-client ca-certificates
+
+# 1) AWS CLI v2（Alpine 官方 edge 仓库已经提供）
+RUN apk add --no-cache \
+  --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community \
+  aws-cli
+
+# 2) kubectl（按官方建议从上游下载二进制，自动匹配架构）
+ARG KUBECTL_VERSION=
+RUN ARCH="$(uname -m)"; \
+    case "$ARCH" in \
+      x86_64)  KARCH=amd64 ;; \
+      aarch64) KARCH=arm64 ;; \
+      *) echo "unsupported arch: $ARCH" && exit 1 ;; \
+    esac && \
+    VER=${KUBECTL_VERSION:-$(curl -L -s https://dl.k8s.io/release/stable.txt)} && \
+    curl -L -o /usr/local/bin/kubectl "https://dl.k8s.io/release/${VER}/bin/linux/${KARCH}/kubectl" && \
+    chmod +x /usr/local/bin/kubectl
+
+# 3) Amazon Q for CLI（使用 AppImage 并在镜像里解包，避免 FUSE 依赖）
+#   官方提供 AppImage 与 deb 包。容器里用 AppImage --appimage-extract 更稳
+ARG Q_APPIMAGE_URL="https://d3u6l4xl5n0lug.cloudfront.net/amazon-q/amazon-q.appimage"
+RUN curl -L -o /tmp/amazon-q.appimage "$Q_APPIMAGE_URL" && \
+    chmod +x /tmp/amazon-q.appimage && \
+    /tmp/amazon-q.appimage --appimage-extract && \
+    mv squashfs-root/usr/bin/q /usr/local/bin/q && \
+    chmod +x /usr/local/bin/q && \
+    rm -rf /tmp/amazon-q.appimage squashfs-root
+
+# 默认工作目录与历史
+ENV HOME=/home/dev \
+    HISTFILE=/home/dev/.bash_history \
+    PROMPT_COMMAND='history -a'
+RUN mkdir -p /home/dev && chown -R 1000:1000 /home/dev
+
+# 保持 ttyd 的入口不变；通过 compose 传参
+USER 0
