@@ -1,0 +1,42 @@
+services:
+  ttyd:
+    image: tsl0922/ttyd:latest
+    entrypoint: ["/usr/bin/ttyd"]   # 镜像里一般在 /usr/bin/ttyd
+    command: ["-W", "-p", "7681", "-c", "admin:${TTYD_PASSWORD:-changeme}", "bash"]  # 添加基础认证作为双重保障
+    # ports:
+    #   - "7681:7681"  # 不直接暴露，通过nginx访问
+    volumes:
+      - ./data:/home/dev
+    working_dir: /home/dev
+    restart: unless-stopped
+    networks:
+      - internal
+    
+  oauth2-proxy:
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.6.0
+    command: ["--config=/oauth2-proxy.cfg"]
+    environment:
+      OAUTH2_PROXY_CLIENT_ID: ${OAUTH2_PROXY_CLIENT_ID}
+      OAUTH2_PROXY_CLIENT_SECRET: ${OAUTH2_PROXY_CLIENT_SECRET}
+      OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_PROXY_COOKIE_SECRET} # 32字节base64
+      OAUTH2_PROXY_OIDC_ISSUER_URL: ${OAUTH2_PROXY_OIDC_ISSUER_URL}
+    volumes:
+      - ./oauth2-proxy.cfg:/oauth2-proxy.cfg:ro
+    restart: unless-stopped
+    networks:
+      - internal
+
+  nginx:
+    image: nginx:1.25-alpine
+    depends_on: [oauth2-proxy, ttyd]
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "8443:443"
+    restart: unless-stopped
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
