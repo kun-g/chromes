@@ -54,18 +54,24 @@ ARG BUILD_DATE=unknown
 RUN echo "Build date: $BUILD_DATE" && ARCH=$(uname -m) && \
     if [ "$ARCH" = "x86_64" ]; then \
       echo "Installing Amazon Q Developer CLI for x86_64..." && \
-      curl --proto '=https' --tlsv1.2 -sSf \
-        "https://desktop-release.q.us-east-1.amazonaws.com/latest/q-x86_64-linux.zip" \
-        -o /tmp/q.zip && \
+      # 先尝试检查 glibc 版本，如果不够新就使用 musl 版本
+      if ldd --version 2>/dev/null | head -1 | grep -q "2\.\([3-9][4-9]\|[4-9][0-9]\)"; then \
+        echo "Using glibc version..." && \
+        QURL="https://desktop-release.q.us-east-1.amazonaws.com/latest/q-x86_64-linux.zip"; \
+      else \
+        echo "Using musl version for compatibility..." && \
+        QURL="https://desktop-release.codewhisperer.us-east-1.amazonaws.com/latest/q-x86_64-linux-musl.zip"; \
+      fi && \
+      curl --proto '=https' --tlsv1.2 -sSf "$QURL" -o /tmp/q.zip && \
       unzip -q /tmp/q.zip -d /tmp && \
       # 运行官方安装脚本，设置环境变量进行全局安装
       Q_INSTALL_GLOBAL=1 /tmp/q/install.sh && \
       rm -rf /tmp/q.zip /tmp/q && \
       echo "Amazon Q installed successfully"; \
     elif [ "$ARCH" = "aarch64" ]; then \
-      echo "Installing Amazon Q Developer CLI for ARM64..." && \
+      echo "Installing Amazon Q Developer CLI for ARM64 (musl version)..." && \
       curl --proto '=https' --tlsv1.2 -sSf \
-        "https://desktop-release.q.us-east-1.amazonaws.com/latest/q-aarch64-linux.zip" \
+        "https://desktop-release.codewhisperer.us-east-1.amazonaws.com/latest/q-aarch64-linux-musl.zip" \
         -o /tmp/q.zip && \
       unzip -q /tmp/q.zip -d /tmp && \
       # 运行官方安装脚本，设置环境变量进行全局安装
