@@ -7,19 +7,24 @@ SHELL ["/bin/bash", "-lc"]
 # 检测系统并安装基础工具
 RUN if command -v apk >/dev/null 2>&1; then \
       # Alpine Linux
-      apk add --no-cache bash curl jq git openssh-client ca-certificates && \
+      apk add --no-cache bash curl jq git openssh-client ca-certificates sudo && \
       apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community aws-cli; \
     elif command -v apt-get >/dev/null 2>&1; then \
       # Debian/Ubuntu
       apt-get update && \
-      apt-get install -y bash curl jq git openssh-client ca-certificates unzip && \
-      curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+      apt-get install -y bash curl jq git openssh-client ca-certificates unzip sudo wget && \
+      # AWS CLI v2 支持多架构
+      ARCH=$(uname -m) && \
+      if [ "$ARCH" = "x86_64" ]; then AWS_ARCH="x86_64"; \
+      elif [ "$ARCH" = "aarch64" ]; then AWS_ARCH="aarch64"; \
+      else echo "Unsupported arch for AWS CLI: $ARCH" && exit 1; fi && \
+      curl "https://awscli.amazonaws.com/awscli-exe-linux-${AWS_ARCH}.zip" -o "awscliv2.zip" && \
       unzip awscliv2.zip && ./aws/install && rm -rf aws awscliv2.zip && \
       apt-get clean && rm -rf /var/lib/apt/lists/*; \
     elif command -v yum >/dev/null 2>&1; then \
       # CentOS/RHEL
       yum update -y && \
-      yum install -y bash curl jq git openssh-clients ca-certificates unzip && \
+      yum install -y bash curl jq git openssh-clients ca-certificates unzip sudo && \
       curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
       unzip awscliv2.zip && ./aws/install && rm -rf aws awscliv2.zip && \
       yum clean all; \
@@ -39,8 +44,46 @@ RUN ARCH="$(uname -m)"; \
     curl -L -o /usr/local/bin/kubectl "https://dl.k8s.io/release/${VER}/bin/linux/${KARCH}/kubectl" && \
     chmod +x /usr/local/bin/kubectl
 
-# Note: Amazon Q CLI installation removed due to unavailable download URL
-# To install Amazon Q CLI, use the official installation method from AWS documentation
+# 3) Amazon Q CLI（支持多架构）
+RUN if command -v apt-get >/dev/null 2>&1; then \
+      # Ubuntu/Debian 系统安装 Amazon Q
+      ARCH=$(uname -m) && \
+      if [ "$ARCH" = "x86_64" ]; then \
+        # x86_64 使用 DEB 包
+        curl --proto '=https' --tlsv1.2 -sSf \
+          https://desktop-release.q.us-east-1.amazonaws.com/latest/amazon-q.deb \
+          -o /tmp/amazon-q.deb && \
+        apt-get update && \
+        apt-get install -y /tmp/amazon-q.deb && \
+        rm /tmp/amazon-q.deb && \
+        apt-get clean && rm -rf /var/lib/apt/lists/*; \
+      elif [ "$ARCH" = "aarch64" ]; then \
+        # ARM64 使用 ZIP 包
+        curl --proto '=https' --tlsv1.2 -sSf \
+          "https://desktop-release.q.us-east-1.amazonaws.com/latest/q-aarch64-linux.zip" \
+          -o /tmp/q.zip && \
+        unzip /tmp/q.zip -d /opt/amazon-q && \
+        ln -s /opt/amazon-q/q /usr/local/bin/q && \
+        rm /tmp/q.zip; \
+      else \
+        echo "Unsupported architecture for Amazon Q: $ARCH"; \
+      fi; \
+    elif command -v apk >/dev/null 2>&1; then \
+      # Alpine Linux 使用 musl 版本
+      ARCH=$(uname -m) && \
+      if [ "$ARCH" = "x86_64" ]; then \
+        curl --proto '=https' --tlsv1.2 -sSf \
+          "https://desktop-release.codewhisperer.us-east-1.amazonaws.com/latest/q-x86_64-linux-musl.zip" \
+          -o /tmp/q.zip && \
+        unzip /tmp/q.zip -d /opt/amazon-q && \
+        ln -s /opt/amazon-q/q /usr/local/bin/q && \
+        rm /tmp/q.zip; \
+      else \
+        echo "Amazon Q not available for Alpine $ARCH"; \
+      fi; \
+    else \
+      echo "Amazon Q installation skipped for this distribution"; \
+    fi
 
 # 默认工作目录与历史
 ENV HOME=/home/dev \
