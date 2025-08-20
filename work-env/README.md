@@ -132,7 +132,38 @@ docker-compose logs -f
 - **nginx**: 反向代理，处理 SSL 和 WebSocket
 - **oauth2-proxy**: OAuth2/OIDC 认证网关
 - **ttyd**: Web 终端服务
-- **work-env 镜像**: 包含 kubectl、AWS CLI、Amazon Q 等开发工具
+- **work-env 镜像**: 包含 kubectl、AWS CLI、Amazon Q、NetBird 等开发工具
+
+## NetBird VPN 配置（可选）
+
+NetBird 提供安全的 WireGuard 基础的 VPN 连接，容器启动时会自动连接到 NetBird 网络。
+
+### 配置步骤
+
+1. 从 NetBird 管理界面获取 Setup Key
+2. 编辑 `.env` 文件，添加 Setup Key：
+   ```bash
+   NETBIRD_KEY=your-setup-key-here
+   ```
+3. 重启容器，NetBird 会自动连接
+
+### NetBird 命令
+
+在容器内可以使用以下命令管理 NetBird：
+
+```bash
+# 查看连接状态
+netbird status
+
+# 手动连接（如果自动连接失败）
+netbird up --setup-key YOUR_KEY
+
+# 断开连接
+netbird down
+
+# 查看路由表
+netbird routes list
+```
 
 ## 故障排查
 

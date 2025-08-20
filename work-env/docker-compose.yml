@@ -1,12 +1,17 @@
 services:
   ttyd:
     image: ghcr.io/kun-g/chromes-work-env:v1.1.0
-    entrypoint: ["/usr/bin/ttyd"]   # 镜像里一般在 /usr/bin/ttyd
-    command: ["-W", "-p", "7681", "-c", "admin:${TTYD_PASSWORD:-changeme}", "bash"]  # 添加基础认证作为双重保障
+    command: ["/usr/bin/ttyd", "-W", "-p", "7681", "-c", "admin:${TTYD_PASSWORD:-changeme}", "bash"]
+    environment:
+      - NETBIRD_KEY=${NETBIRD_KEY}  # NetBird setup key
+    cap_add:
+      - NET_ADMIN    # NetBird 需要的网络权限
+      - SYS_ADMIN
     ports:
       - "7681:7681"  # 不直接暴露，通过nginx访问
     volumes:
       - ./data:/home/dev
+      - /dev/net/tun:/dev/net/tun  # NetBird 需要的 TUN 设备
     working_dir: /home/dev
     restart: unless-stopped
     networks:

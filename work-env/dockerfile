@@ -98,5 +98,12 @@ ENV HOME=/home/dev \
     PROMPT_COMMAND='history -a'
 RUN mkdir -p /home/dev && chown -R 1000:1000 /home/dev
 
-# 保持 ttyd 的入口不变；通过 compose 传参
+# 添加启动脚本
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# 设置入口点
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+# 保持 root 用户权限以运行 NetBird
 USER 0
