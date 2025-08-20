@@ -48,58 +48,31 @@ RUN ARCH="$(uname -m)"; \
     curl -L -o /usr/local/bin/kubectl "https://dl.k8s.io/release/${VER}/bin/linux/${KARCH}/kubectl" && \
     chmod +x /usr/local/bin/kubectl
 
-# 3) Amazon Q CLI（支持多架构，但允许失败）
-# 注意：Amazon Q 需要 GUI 依赖，在某些容器环境中可能无法安装
-RUN if command -v apt-get >/dev/null 2>&1; then \
-      # Ubuntu/Debian 系统安装 Amazon Q
-      ARCH=$(uname -m) && \
-      if [ "$ARCH" = "x86_64" ]; then \
-        # x86_64 使用 ZIP 包（比 DEB 包更稳定）
-        echo "Installing Amazon Q for x86_64..." && \
-        curl --proto '=https' --tlsv1.2 -sSf \
-          "https://desktop-release.q.us-east-1.amazonaws.com/latest/q-x86_64-linux.zip" \
-          -o /tmp/q.zip && \
-        unzip -q /tmp/q.zip -d /opt/amazon-q && \
-        if [ -f /opt/amazon-q/q ]; then \
-          chmod +x /opt/amazon-q/q && \
-          ln -sf /opt/amazon-q/q /usr/local/bin/q; \
-        fi && \
-        rm -f /tmp/q.zip || echo "Amazon Q installation failed, continuing..."; \
-      elif [ "$ARCH" = "aarch64" ]; then \
-        # ARM64 使用 ZIP 包
-        echo "Installing Amazon Q for ARM64..." && \
-        curl --proto '=https' --tlsv1.2 -sSf \
-          "https://desktop-release.q.us-east-1.amazonaws.com/latest/q-aarch64-linux.zip" \
-          -o /tmp/q.zip && \
-        unzip -q /tmp/q.zip -d /opt/amazon-q && \
-        if [ -f /opt/amazon-q/q ]; then \
-          chmod +x /opt/amazon-q/q && \
-          ln -sf /opt/amazon-q/q /usr/local/bin/q; \
-        fi && \
-        rm -f /tmp/q.zip || echo "Amazon Q installation failed, continuing..."; \
-      else \
-        echo "Amazon Q not supported for architecture: $ARCH"; \
-      fi; \
-    elif command -v apk >/dev/null 2>&1; then \
-      # Alpine Linux 使用 musl 版本
-      ARCH=$(uname -m) && \
-      if [ "$ARCH" = "x86_64" ]; then \
-        echo "Installing Amazon Q for Alpine x86_64..." && \
-        curl --proto '=https' --tlsv1.2 -sSf \
-          "https://desktop-release.codewhisperer.us-east-1.amazonaws.com/latest/q-x86_64-linux-musl.zip" \
-          -o /tmp/q.zip && \
-        unzip -q /tmp/q.zip -d /opt/amazon-q && \
-        if [ -f /opt/amazon-q/q ]; then \
-          chmod +x /opt/amazon-q/q && \
-          ln -sf /opt/amazon-q/q /usr/local/bin/q; \
-        fi && \
-        rm -f /tmp/q.zip || echo "Amazon Q installation failed, continuing..."; \
-      else \
-        echo "Amazon Q not available for Alpine $ARCH"; \
-      fi; \
+# 3) Amazon Q CLI（按官方文档安装，支持 SSH/无头环境）
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+      echo "Installing Amazon Q Developer CLI for x86_64..." && \
+      curl --proto '=https' --tlsv1.2 -sSf \
+        "https://desktop-release.q.us-east-1.amazonaws.com/latest/q-x86_64-linux.zip" \
+        -o /tmp/q.zip && \
+      unzip -q /tmp/q.zip -d /tmp && \
+      # 运行官方安装脚本，使用全局安装路径
+      /tmp/q/install.sh --global && \
+      rm -rf /tmp/q.zip /tmp/q && \
+      echo "Amazon Q installed to /usr/local/bin/q"; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+      echo "Installing Amazon Q Developer CLI for ARM64..." && \
+      curl --proto '=https' --tlsv1.2 -sSf \
+        "https://desktop-release.q.us-east-1.amazonaws.com/latest/q-aarch64-linux.zip" \
+        -o /tmp/q.zip && \
+      unzip -q /tmp/q.zip -d /tmp && \
+      # 运行官方安装脚本，使用全局安装路径
+      /tmp/q/install.sh --global && \
+      rm -rf /tmp/q.zip /tmp/q && \
+      echo "Amazon Q installed to /usr/local/bin/q"; \
     else \
-      echo "Amazon Q installation skipped for this distribution"; \
-    fi
+      echo "Amazon Q not supported for architecture: $ARCH"; \
+    fi || echo "Amazon Q installation failed, continuing without it..."
 
 # 默认工作目录与历史
 ENV HOME=/home/dev \
