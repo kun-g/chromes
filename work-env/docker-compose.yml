@@ -1,6 +1,6 @@
 services:
   ttyd:
-    image: ghcr.io/kun-g/chromes-work-env:v1.1.0
+    image: ghcr.io/kun-g/chromes-work-env:v1.2.0
     command: ["/usr/bin/ttyd", "-W", "-p", "7681", "-c", "admin:${TTYD_PASSWORD:-changeme}", "bash"]
     environment:
       - NETBIRD_KEY=${NETBIRD_KEY}  # NetBird setup key
