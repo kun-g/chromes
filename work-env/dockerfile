@@ -18,15 +18,19 @@ RUN if command -v apk >/dev/null 2>&1; then \
       if [ "$ARCH" = "x86_64" ]; then AWS_ARCH="x86_64"; \
       elif [ "$ARCH" = "aarch64" ]; then AWS_ARCH="aarch64"; \
       else echo "Unsupported arch for AWS CLI: $ARCH" && exit 1; fi && \
-      curl "https://awscli.amazonaws.com/awscli-exe-linux-${AWS_ARCH}.zip" -o "awscliv2.zip" && \
-      unzip awscliv2.zip && ./aws/install && rm -rf aws awscliv2.zip && \
+      echo "Downloading AWS CLI for ${AWS_ARCH}..." && \
+      curl -sS "https://awscli.amazonaws.com/awscli-exe-linux-${AWS_ARCH}.zip" -o "awscliv2.zip" && \
+      unzip -q awscliv2.zip && ./aws/install >/dev/null 2>&1 && rm -rf aws awscliv2.zip && \
+      echo "AWS CLI installed successfully" && \
       apt-get clean && rm -rf /var/lib/apt/lists/*; \
     elif command -v yum >/dev/null 2>&1; then \
       # CentOS/RHEL
       yum update -y && \
       yum install -y bash curl jq git openssh-clients ca-certificates unzip sudo && \
-      curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
-      unzip awscliv2.zip && ./aws/install && rm -rf aws awscliv2.zip && \
+      echo "Downloading AWS CLI..." && \
+      curl -sS "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+      unzip -q awscliv2.zip && ./aws/install >/dev/null 2>&1 && rm -rf aws awscliv2.zip && \
+      echo "AWS CLI installed successfully" && \
       yum clean all; \
     else \
       echo "Unsupported package manager" && exit 1; \
@@ -55,7 +59,7 @@ RUN if command -v apt-get >/dev/null 2>&1; then \
         curl --proto '=https' --tlsv1.2 -sSf \
           "https://desktop-release.q.us-east-1.amazonaws.com/latest/q-x86_64-linux.zip" \
           -o /tmp/q.zip && \
-        unzip /tmp/q.zip -d /opt/amazon-q && \
+        unzip -q /tmp/q.zip -d /opt/amazon-q && \
         if [ -f /opt/amazon-q/q ]; then \
           chmod +x /opt/amazon-q/q && \
           ln -sf /opt/amazon-q/q /usr/local/bin/q; \
@@ -67,7 +71,7 @@ RUN if command -v apt-get >/dev/null 2>&1; then \
         curl --proto '=https' --tlsv1.2 -sSf \
           "https://desktop-release.q.us-east-1.amazonaws.com/latest/q-aarch64-linux.zip" \
           -o /tmp/q.zip && \
-        unzip /tmp/q.zip -d /opt/amazon-q && \
+        unzip -q /tmp/q.zip -d /opt/amazon-q && \
         if [ -f /opt/amazon-q/q ]; then \
           chmod +x /opt/amazon-q/q && \
           ln -sf /opt/amazon-q/q /usr/local/bin/q; \
@@ -84,7 +88,7 @@ RUN if command -v apt-get >/dev/null 2>&1; then \
         curl --proto '=https' --tlsv1.2 -sSf \
           "https://desktop-release.codewhisperer.us-east-1.amazonaws.com/latest/q-x86_64-linux-musl.zip" \
           -o /tmp/q.zip && \
-        unzip /tmp/q.zip -d /opt/amazon-q && \
+        unzip -q /tmp/q.zip -d /opt/amazon-q && \
         if [ -f /opt/amazon-q/q ]; then \
           chmod +x /opt/amazon-q/q && \
           ln -sf /opt/amazon-q/q /usr/local/bin/q; \
