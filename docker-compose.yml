@@ -3,23 +3,9 @@ services:
     image: kasmweb/chrome:1.16.0
     restart: unless-stopped
     shm_size: 2g                 # 解决Chromium崩溃/卡顿
-    deploy:
-      replicas: 1
-      placement:
-        constraints:
-          - node.labels.role == amd64
     environment:
       - VNC_PW=${KASM_VNC_PW:-changeme_please}  # Web界面登陆密码
       - KASM_PORT=6901
       - SSL=false                # 由前置Nginx终止TLS
     ports:
-      - "127.0.0.1:6901:6901"    # 仅本机暴露
-    volumes:
-      - type: tmpfs
-        target: /home/kasm-user
-        tmpfs:
-          size: 2147483648       # 2GB，可按需调整
-      - type: tmpfs
-        target: /config
-        tmpfs:
-          size: 268435456        # 256MB
+      - "6901:6901"    # 仅本机暴露
