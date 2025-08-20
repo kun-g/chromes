@@ -79,8 +79,12 @@ RUN echo "Build date: $BUILD_DATE" && ARCH=$(uname -m) && \
       rm -rf /tmp/q.zip /tmp/q && \
       echo "Amazon Q installed successfully"; \
     else \
-      echo "Amazon Q not supported for architecture: $ARCH"; \
-    fi || echo "Amazon Q installation failed, continuing without it..."
+      echo "Amazon Q not supported for architecture: $ARCH" && exit 1; \
+    fi && \
+    # 验证 Amazon Q 安装是否成功
+    echo "Verifying Amazon Q installation..." && \
+    which q && q --version && \
+    echo "Amazon Q CLI verified successfully"
 
 # 默认工作目录与历史
 ENV HOME=/home/dev \
