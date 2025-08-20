@@ -1,6 +1,6 @@
 services:
   ttyd:
-    image: ghcr.io/kun-g/chromes-work-env:v1.0.1
+    image: ghcr.io/kun-g/chromes-work-env:v1.0.2
     entrypoint: ["/usr/bin/ttyd"]   # 镜像里一般在 /usr/bin/ttyd
     command: ["-W", "-p", "7681", "-c", "admin:${TTYD_PASSWORD:-changeme}", "bash"]  # 添加基础认证作为双重保障
     ports:
