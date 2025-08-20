@@ -58,10 +58,8 @@ RUN echo "Build date: $BUILD_DATE" && ARCH=$(uname -m) && \
         "https://desktop-release.q.us-east-1.amazonaws.com/latest/q-x86_64-linux.zip" \
         -o /tmp/q.zip && \
       unzip -q /tmp/q.zip -d /tmp && \
-      # 运行官方安装脚本，使用无确认模式进行自动安装
-      /tmp/q/install.sh --no-confirm && \
-      # 创建全局符号链接
-      ln -sf ~/.local/bin/q /usr/local/bin/q 2>/dev/null || true && \
+      # 运行官方安装脚本，设置环境变量进行全局安装
+      Q_INSTALL_GLOBAL=1 /tmp/q/install.sh && \
       rm -rf /tmp/q.zip /tmp/q && \
       echo "Amazon Q installed successfully"; \
     elif [ "$ARCH" = "aarch64" ]; then \
@@ -70,10 +68,8 @@ RUN echo "Build date: $BUILD_DATE" && ARCH=$(uname -m) && \
         "https://desktop-release.q.us-east-1.amazonaws.com/latest/q-aarch64-linux.zip" \
         -o /tmp/q.zip && \
       unzip -q /tmp/q.zip -d /tmp && \
-      # 运行官方安装脚本，使用无确认模式进行自动安装
-      /tmp/q/install.sh --no-confirm && \
-      # 创建全局符号链接
-      ln -sf ~/.local/bin/q /usr/local/bin/q 2>/dev/null || true && \
+      # 运行官方安装脚本，设置环境变量进行全局安装
+      Q_INSTALL_GLOBAL=1 /tmp/q/install.sh && \
       rm -rf /tmp/q.zip /tmp/q && \
       echo "Amazon Q installed successfully"; \
     else \
