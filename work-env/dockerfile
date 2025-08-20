@@ -41,13 +41,17 @@ RUN ARCH="$(uname -m)"; \
 
 # 3) Amazon Q for CLI（使用 AppImage 并在镜像里解包，避免 FUSE 依赖）
 #   官方提供 AppImage 与 deb 包。容器里用 AppImage --appimage-extract 更稳
+#   注意：如果下载失败，跳过此步骤以避免构建失败
 ARG Q_APPIMAGE_URL="https://d3u6l4xl5n0lug.cloudfront.net/amazon-q/amazon-q.appimage"
 RUN curl -L -o /tmp/amazon-q.appimage "$Q_APPIMAGE_URL" && \
     chmod +x /tmp/amazon-q.appimage && \
     /tmp/amazon-q.appimage --appimage-extract && \
     mv squashfs-root/usr/bin/q /usr/local/bin/q && \
     chmod +x /usr/local/bin/q && \
-    rm -rf /tmp/amazon-q.appimage squashfs-root
+    rm -rf /tmp/amazon-q.appimage squashfs-root; \
+    if [ ! -f /usr/local/bin/q ]; then \
+        echo "Warning: Amazon Q CLI installation failed, continuing without it..."; \
+    fi
 
 # 默认工作目录与历史
 ENV HOME=/home/dev \
