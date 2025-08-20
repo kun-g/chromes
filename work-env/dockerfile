@@ -49,27 +49,33 @@ RUN ARCH="$(uname -m)"; \
     chmod +x /usr/local/bin/kubectl
 
 # 3) Amazon Q CLI（按官方文档安装，支持 SSH/无头环境）
-RUN ARCH=$(uname -m) && \
+# 添加构建时间戳以避免缓存问题
+ARG BUILD_DATE=unknown
+RUN echo "Build date: $BUILD_DATE" && ARCH=$(uname -m) && \
     if [ "$ARCH" = "x86_64" ]; then \
       echo "Installing Amazon Q Developer CLI for x86_64..." && \
       curl --proto '=https' --tlsv1.2 -sSf \
         "https://desktop-release.q.us-east-1.amazonaws.com/latest/q-x86_64-linux.zip" \
         -o /tmp/q.zip && \
       unzip -q /tmp/q.zip -d /tmp && \
-      # 运行官方安装脚本，使用全局安装路径
-      /tmp/q/install.sh --global && \
+      # 运行官方安装脚本，使用无确认模式进行自动安装
+      /tmp/q/install.sh --no-confirm && \
+      # 创建全局符号链接
+      ln -sf ~/.local/bin/q /usr/local/bin/q 2>/dev/null || true && \
       rm -rf /tmp/q.zip /tmp/q && \
-      echo "Amazon Q installed to /usr/local/bin/q"; \
+      echo "Amazon Q installed successfully"; \
     elif [ "$ARCH" = "aarch64" ]; then \
       echo "Installing Amazon Q Developer CLI for ARM64..." && \
       curl --proto '=https' --tlsv1.2 -sSf \
         "https://desktop-release.q.us-east-1.amazonaws.com/latest/q-aarch64-linux.zip" \
         -o /tmp/q.zip && \
       unzip -q /tmp/q.zip -d /tmp && \
-      # 运行官方安装脚本，使用全局安装路径
-      /tmp/q/install.sh --global && \
+      # 运行官方安装脚本，使用无确认模式进行自动安装
+      /tmp/q/install.sh --no-confirm && \
+      # 创建全局符号链接
+      ln -sf ~/.local/bin/q /usr/local/bin/q 2>/dev/null || true && \
       rm -rf /tmp/q.zip /tmp/q && \
-      echo "Amazon Q installed to /usr/local/bin/q"; \
+      echo "Amazon Q installed successfully"; \
     else \
       echo "Amazon Q not supported for architecture: $ARCH"; \
     fi || echo "Amazon Q installation failed, continuing without it..."

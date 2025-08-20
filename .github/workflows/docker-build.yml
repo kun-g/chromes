@@ -68,3 +68,4 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             KUBECTL_VERSION=
+            BUILD_DATE=${{ github.run_id }}-${{ github.run_number }}
