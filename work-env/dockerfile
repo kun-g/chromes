@@ -2,15 +2,30 @@
 FROM tsl0922/ttyd:latest
 
 USER root
-SHELL ["/bin/sh", "-lc"]
+SHELL ["/bin/bash", "-lc"]
 
-# 基础工具
-RUN apk add --no-cache bash curl jq git openssh-client ca-certificates
-
-# 1) AWS CLI v2（Alpine 官方 edge 仓库已经提供）
-RUN apk add --no-cache \
-  --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community \
-  aws-cli
+# 检测系统并安装基础工具
+RUN if command -v apk >/dev/null 2>&1; then \
+      # Alpine Linux
+      apk add --no-cache bash curl jq git openssh-client ca-certificates && \
+      apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community aws-cli; \
+    elif command -v apt-get >/dev/null 2>&1; then \
+      # Debian/Ubuntu
+      apt-get update && \
+      apt-get install -y bash curl jq git openssh-client ca-certificates unzip && \
+      curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+      unzip awscliv2.zip && ./aws/install && rm -rf aws awscliv2.zip && \
+      apt-get clean && rm -rf /var/lib/apt/lists/*; \
+    elif command -v yum >/dev/null 2>&1; then \
+      # CentOS/RHEL
+      yum update -y && \
+      yum install -y bash curl jq git openssh-clients ca-certificates unzip && \
+      curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+      unzip awscliv2.zip && ./aws/install && rm -rf aws awscliv2.zip && \
+      yum clean all; \
+    else \
+      echo "Unsupported package manager" && exit 1; \
+    fi
 
 # 2) kubectl（按官方建议从上游下载二进制，自动匹配架构）
 ARG KUBECTL_VERSION=
