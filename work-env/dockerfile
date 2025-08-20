@@ -86,6 +86,12 @@ RUN echo "Build date: $BUILD_DATE" && ARCH=$(uname -m) && \
     which q && q --version && \
     echo "Amazon Q CLI verified successfully"
 
+# 4) NetBird VPN client
+RUN echo "Installing NetBird VPN client..." && \
+    curl -fsSL https://pkgs.netbird.io/install.sh | sh && \
+    echo "NetBird installed successfully" && \
+    netbird version
+
 # 默认工作目录与历史
 ENV HOME=/home/dev \
     HISTFILE=/home/dev/.bash_history \
