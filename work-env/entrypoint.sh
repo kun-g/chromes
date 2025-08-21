@@ -3,6 +3,7 @@ set -e
 
 # NetBird 自动注册和连接
 if [ -n "${NETBIRD_KEY}" ]; then
+    netbird service start
     echo "NetBird setup key detected, checking connection status..."
     
     # 检查 NetBird 是否已经连接
