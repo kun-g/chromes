@@ -1,0 +1,20 @@
+# Python egg-info directories
+src/*.egg-info/
+*.egg-info/
+
+# Build artifacts  
+build/
+dist/
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
