@@ -1,0 +1,13 @@
+[project]
+name = "netbird-manager"
+version = "0.1.0"
+description = "NetBird Groups and Peers Management Tool"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "python-dotenv>=1.1.1",
+    "requests>=2.32.5",
+]
+
+[project.scripts]
+netbird-manager = "manage_groups:main"
